@@ -15,7 +15,7 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [allWaves, setAllWaves] = useState([])
   const [message, setMessage] = useState('')
-  const contractAddress = '0x92F8109b2e476bb05644B885B3b6f0F2df86b58b'
+  const contractAddress = '0xd096DB143bB4419E986cdF702C19a60b17B122d4'
   const contractABI = abi.abi
 
   const wave = async () => {
