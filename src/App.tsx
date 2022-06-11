@@ -7,12 +7,15 @@ import Footer from './components/Footer'
 import logo from './assets/logo.svg'
 import { UserIcon, LightningBoltIcon } from '@heroicons/react/outline'
 import Loading from './components/Loading'
+import Wave from './components/Wave'
 
 function App() {
   const [currentAccount, setCurrentAccount] = useState()
   const [totalVotes, setTotalVotes] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const contractAddress = '0xC57E78357168FeC276367B9DcA686bD4C79BAb28'
+  const [allWaves, setAllWaves] = useState([])
+  const [message, setMessage] = useState('')
+  const contractAddress = '0x92F8109b2e476bb05644B885B3b6f0F2df86b58b'
   const contractABI = abi.abi
 
   const wave = async () => {
@@ -24,20 +27,21 @@ function App() {
         const signer = provider.getSigner()
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer)
 
-        let count = await wavePortalContract.getTotalWaves()
-        console.log('Retrieved total wave count...', count.toNumber())
+        // let count = await wavePortalContract.getTotalWaves()
+        // console.log('Retrieved total wave count...', count.toNumber())
         /**
          * execute wave from smat contract
          */
-        const waveTxn = await wavePortalContract.wave("I'm the first wave!")
+        const waveTxn = await wavePortalContract.wave(message)
         console.log('Mining...', waveTxn.hash)
         setIsLoading(true)
         await waveTxn.wait()
         console.log('Mined -- ', waveTxn.hash)
         setIsLoading(false)
-        count = await wavePortalContract.getTotalWaves()
+        let count = await wavePortalContract.getTotalWaves()
         console.log('Retrieved total wave count...', count.toNumber())
         setTotalVotes(count.toNumber())
+        setMessage('')
       } else {
         console.log("Ethereum object doesn't exist!")
       }
@@ -66,10 +70,48 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    getTotalWaves()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalVotes])
+  const getAllWaves = async () => {
+    try {
+      // @ts-ignore
+      const { ethereum } = window
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum)
+        const signer = provider.getSigner()
+        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer)
+
+        /*
+         * Call the getAllWaves method from your Smart Contract
+         */
+        const waves = await wavePortalContract.getAllWaves()
+
+        /*
+         * We only need address, timestamp, and message in our UI so let's
+         * pick those out
+         */
+        // @ts-ignore
+        let wavesCleaned = []
+        // @ts-ignore
+        waves.forEach((wave) => {
+          wavesCleaned.push({
+            address: wave.waver,
+            timestamp: new Date(wave.timestamp * 1000),
+            message: wave.message,
+          })
+        })
+
+        /*
+         * Store our data in React State
+         */
+
+        // @ts-ignore
+        setAllWaves(wavesCleaned)
+      } else {
+        console.log("Ethereum object doesn't exist!")
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const connectWallet = async () => {
     try {
@@ -84,10 +126,20 @@ function App() {
       })
       setCurrentAccount(accounts[0])
       console.log('connected', accounts[0])
+      getAllWaves()
     } catch (error) {
       console.log(error)
     }
   }
+
+  useEffect(() => {
+    if (currentAccount) {
+      getTotalWaves()
+      getAllWaves()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalVotes, currentAccount])
+
   return (
     <div className="bg-gradient-to-b from-cyan-50 to-teal-100 font-mono antialiased">
       <Container>
@@ -139,13 +191,46 @@ function App() {
           {isLoading ? (
             <Loading />
           ) : (
-            <div>
-              <button
-                className="h-12 border-2 border-black bg-teal-400 px-6 font-semibold uppercase tracking-wider text-black"
-                onClick={wave}
-              >
-                Wave at me
-              </button>
+            <div className="flex w-full flex-col justify-center">
+              <div className="">
+                <label htmlFor="message" className="block text-sm font-medium text-cyan-700">
+                  Message
+                </label>
+                <div className="mt-1">
+                  <input
+                    name="message"
+                    type="text"
+                    className="block w-full border-cyan-300 py-2 px-3 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-cyan-500 sm:text-sm"
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Type your wave message here..."
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <button
+                  className="h-12 w-full border-2 border-cyan-800 bg-cyan-500 px-6 font-semibold uppercase tracking-wider text-cyan-100 hover:bg-cyan-700 hover:text-cyan-200"
+                  onClick={wave}
+                >
+                  Wave at me
+                </button>
+              </div>
+            </div>
+          )}
+          {allWaves && (
+            <div className="mt-4 space-y-4">
+              {allWaves.map((wave, index) => {
+                return (
+                  <Wave
+                    key={index}
+                    // @ts-ignore
+                    address={wave?.address}
+                    // @ts-ignore
+                    time={wave?.timestamp}
+                    // @ts-ignore
+                    message={wave.message}
+                  />
+                )
+              })}{' '}
             </div>
           )}
         </main>
