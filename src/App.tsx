@@ -1,5 +1,4 @@
 import React from "react";
-import { ethers } from "ethers";
 import Container from "./components/Container";
 
 function App() {
