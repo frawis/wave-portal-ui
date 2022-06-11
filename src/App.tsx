@@ -15,7 +15,7 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [allWaves, setAllWaves] = useState([])
   const [message, setMessage] = useState('')
-  const contractAddress = '0xd096DB143bB4419E986cdF702C19a60b17B122d4'
+  const contractAddress = '0x6e76563C444F2bABDA96039d6c73E6192f8d9aCB'
   const contractABI = abi.abi
 
   const wave = async () => {
@@ -32,14 +32,14 @@ function App() {
         /**
          * execute wave from smat contract
          */
-        const waveTxn = await wavePortalContract.wave(message)
-        console.log('Mining...', waveTxn.hash)
+        const waveTxn = await wavePortalContract.wave(message, { gasLimit: 300000 })
+        // console.log('Mining...', waveTxn.hash)
         setIsLoading(true)
         await waveTxn.wait()
-        console.log('Mined -- ', waveTxn.hash)
+        // console.log('Mined -- ', waveTxn.hash)
         setIsLoading(false)
         let count = await wavePortalContract.getTotalWaves()
-        console.log('Retrieved total wave count...', count.toNumber())
+        // console.log('Retrieved total wave count...', count.toNumber())
         setTotalVotes(count.toNumber())
         setMessage('')
       } else {
@@ -60,7 +60,7 @@ function App() {
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer)
 
         let count = await wavePortalContract.getTotalWaves()
-        console.log('Retrieved total wave count...', count.toNumber())
+        // console.log('Retrieved total wave count...', count.toNumber())
         setTotalVotes(count.toNumber())
       } else {
         console.log("Ethereum object doesn't exist!")
@@ -126,7 +126,7 @@ function App() {
       })
       setCurrentAccount(accounts[0])
       console.log('connected', accounts[0])
-      getAllWaves()
+      // getAllWaves()
     } catch (error) {
       console.log(error)
     }
@@ -138,7 +138,7 @@ function App() {
       getAllWaves()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalVotes, currentAccount])
+  }, [totalVotes,currentAccount])
 
   return (
     <div className="bg-gradient-to-b from-cyan-50 to-teal-100 font-mono antialiased">
